@@ -1,0 +1,13 @@
+{
+  "deals": [
+    { "id": "1", "nom": "Contrat — signe demain", "valeur": "?", "statut": "vert", "dernierContact": "Aujourd'hui", "prochainePAS": "Signature demain" },
+    { "id": "2", "nom": "Terrain A — développeur", "valeur": "?", "statut": "orange", "dernierContact": "Cette semaine", "prochainePAS": "Suivi jeudi" },
+    { "id": "3", "nom": "Terrain B — développeur", "valeur": "?", "statut": "orange", "dernierContact": "Cette semaine", "prochainePAS": "Appel vendredi" }
+  ],
+  "taches": [
+    { "id": "1", "texte": "Demander référence au client qui signe demain", "fait": false, "objectif": 1 },
+    { "id": "2", "texte": "Identifier 3 CPA à contacter cette semaine", "fait": false, "objectif": 1 },
+    { "id": "3", "texte": "Créer Google Sheet CRM (7 colonnes)", "fait": false, "objectif": 1 },
+    { "id": "4", "texte": "Confirmer valeur réelle des 2 terrains", "fait": false, "objectif": 1 }
+  ]
+}
