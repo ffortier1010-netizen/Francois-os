@@ -1,9 +1,6 @@
-import Anthropic from "@anthropic-ai/sdk";
 import { NextResponse } from "next/server";
 
 export const maxDuration = 30;
-
-const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
 const SYSTEM_PROMPT = `Tu es FORTIER OS, le copilote IA personnel de François Fortier — directeur de construction, courtier immobilier commercial, entrepreneur au Québec.
 
@@ -36,16 +33,31 @@ export async function POST(req: Request) {
   try {
     const { messages } = await req.json();
 
-    const response = await client.messages.create({
-      model: "claude-sonnet-4-6",
-      max_tokens: 1024,
-      system: SYSTEM_PROMPT,
-      messages,
+    const res = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-api-key": process.env.ANTHROPIC_API_KEY!,
+        "anthropic-version": "2023-06-01",
+      },
+      body: JSON.stringify({
+        model: "claude-sonnet-4-6",
+        max_tokens: 1024,
+        system: SYSTEM_PROMPT,
+        messages,
+      }),
     });
 
-    const text = response.content[0].type === "text" ? response.content[0].text : "";
+    if (!res.ok) {
+      const err = await res.text();
+      console.error("Anthropic error:", err);
+      return NextResponse.json({ error: "Erreur API" }, { status: 500 });
+    }
 
+    const data = await res.json();
+    const text = data.content?.[0]?.text ?? "";
     return NextResponse.json({ text });
+
   } catch (err) {
     console.error("Chat error:", err);
     return NextResponse.json({ error: "Erreur serveur" }, { status: 500 });
