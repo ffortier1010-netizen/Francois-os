@@ -351,23 +351,11 @@ function ChatTab() {
         body: JSON.stringify({ messages: newMessages }),
       });
 
-      if (!res.body) throw new Error("No stream");
-
-      const reader = res.body.getReader();
-      const decoder = new TextDecoder();
-      let assistantText = "";
-
-      setMessages(prev => [...prev, { role: "assistant", content: "" }]);
-
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        assistantText += decoder.decode(value, { stream: true });
-        setMessages(prev => {
-          const updated = [...prev];
-          updated[updated.length - 1] = { role: "assistant", content: assistantText };
-          return updated;
-        });
+      const data = await res.json();
+      if (data.text) {
+        setMessages(prev => [...prev, { role: "assistant", content: data.text }]);
+      } else {
+        throw new Error("Pas de réponse");
       }
     } catch {
       setMessages(prev => [...prev, { role: "assistant", content: "Erreur de connexion. Réessaie." }]);

@@ -1,4 +1,7 @@
 import Anthropic from "@anthropic-ai/sdk";
+import { NextResponse } from "next/server";
+
+export const maxDuration = 30;
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
@@ -30,32 +33,21 @@ FORMAT de réponse (court par défaut) :
 Sois direct, court, en français québécois professionnel. Jamais de validation sans raison précise.`;
 
 export async function POST(req: Request) {
-  const { messages } = await req.json();
+  try {
+    const { messages } = await req.json();
 
-  const stream = await client.messages.stream({
-    model: "claude-sonnet-4-6",
-    max_tokens: 1024,
-    system: SYSTEM_PROMPT,
-    messages,
-  });
+    const response = await client.messages.create({
+      model: "claude-sonnet-4-6",
+      max_tokens: 1024,
+      system: SYSTEM_PROMPT,
+      messages,
+    });
 
-  const encoder = new TextEncoder();
+    const text = response.content[0].type === "text" ? response.content[0].text : "";
 
-  const readable = new ReadableStream({
-    async start(controller) {
-      for await (const chunk of stream) {
-        if (
-          chunk.type === "content_block_delta" &&
-          chunk.delta.type === "text_delta"
-        ) {
-          controller.enqueue(encoder.encode(chunk.delta.text));
-        }
-      }
-      controller.close();
-    },
-  });
-
-  return new Response(readable, {
-    headers: { "Content-Type": "text/plain; charset=utf-8" },
-  });
+    return NextResponse.json({ text });
+  } catch (err) {
+    console.error("Chat error:", err);
+    return NextResponse.json({ error: "Erreur serveur" }, { status: 500 });
+  }
 }
