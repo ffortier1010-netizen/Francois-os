@@ -324,7 +324,7 @@ function TachesTab({ taches, setTaches }: { taches: Tache[]; setTaches: (t: Tach
 
 function ChatTab() {
   const [messages, setMessages] = useState<Message[]>([
-    { role: "assistant", content: "FORTIER OS actif. Pipeline: 3 dossiers, contrat qui signe demain. Qu'est-ce qu'on attaque?" }
+    { role: "assistant", content: "Léo Atlas actif. Pipeline: 3 dossiers, contrat qui signe demain. Qu'est-ce qu'on attaque?" }
   ]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
@@ -480,7 +480,7 @@ export default function Home() {
     return (
       <div className="flex h-full items-center justify-center" style={{ background: "var(--dark)" }}>
         <div className="text-center space-y-3">
-          <div className="text-2xl font-bold tracking-widest" style={{ color: "var(--gold)" }}>FORTIER OS</div>
+          <div className="text-2xl font-bold tracking-widest" style={{ color: "var(--gold)" }}>LÉO ATLAS</div>
           <div className="flex gap-1.5 justify-center">
             {[0, 150, 300].map(d => (
               <div key={d} className="w-1.5 h-1.5 rounded-full animate-bounce" style={{ background: "var(--gold)", animationDelay: `${d}ms` }} />
@@ -497,7 +497,7 @@ export default function Home() {
       <div className="shrink-0 px-4 pt-12 pb-4" style={{ borderBottom: "1px solid var(--border)" }}>
         <div className="flex items-center justify-between">
           <div>
-            <div className="text-xs font-bold tracking-widest uppercase" style={{ color: "var(--gold)" }}>FORTIER OS</div>
+            <div className="text-xs font-bold tracking-widest uppercase" style={{ color: "var(--gold)" }}>LÉO ATLAS</div>
             <div className="text-lg font-bold mt-0.5">Bonjour, François</div>
           </div>
           <div className="text-right">

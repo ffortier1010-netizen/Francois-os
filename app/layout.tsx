@@ -2,7 +2,7 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "FORTIER OS",
+  title: "Léo Atlas",
   description: "Copilote IA — François Fortier",
   manifest: "/manifest.json",
 };
