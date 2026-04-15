@@ -38,8 +38,7 @@ export async function POST(req: Request) {
     const data = await res.json();
 
     if (!res.ok) {
-      console.error("Twilio error:", data);
-      return NextResponse.json({ error: "Erreur Twilio" }, { status: 500 });
+      return NextResponse.json({ error: "Erreur Twilio", details: data }, { status: 500 });
     }
 
     return NextResponse.json({ ok: true, sid: data.sid });
