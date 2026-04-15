@@ -7,7 +7,8 @@ export async function POST(req: Request) {
     const { message, secret } = await req.json();
 
     // Vérification du secret
-    if (secret !== process.env.SMS_SECRET) {
+    const validSecret = process.env.SMS_SECRET || "LeoAtlas2026";
+    if (secret !== validSecret) {
       return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
     }
 
