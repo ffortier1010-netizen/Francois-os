@@ -33,12 +33,13 @@ async function searchGoogleDrive(query: string): Promise<{ name: string; link: s
   const drive = google.drive({ version: "v3", auth });
 
   // Extraire les mots-clés du message
-  const words = query.toLowerCase().split(/\s+/).filter(w => w.length > 3 && !DOC_KEYWORDS.includes(w));
-  const searchTerms = words.slice(0, 3).join(" ");
+  const words = query.toLowerCase().split(/\s+/).filter(w => w.length > 2 && !DOC_KEYWORDS.includes(w));
+  const searchTerms = words.slice(0, 3);
 
-  const nameQuery = searchTerms
-    ? `'${folderId}' in parents and name contains '${searchTerms}' and trashed=false`
-    : `'${folderId}' in parents and trashed=false`;
+  // Recherche récursive dans tous les sous-dossiers
+  const nameQuery = searchTerms.length > 0
+    ? searchTerms.map(w => `name contains '${w}'`).join(" and ") + " and trashed=false"
+    : `trashed=false`;
 
   const res = await drive.files.list({
     q: nameQuery,
