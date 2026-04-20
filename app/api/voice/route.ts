@@ -352,6 +352,14 @@ export async function POST(req: Request) {
     return new Response("OK", { status: 200 });
   }
 
+  const BASE_URL = process.env.VERCEL_URL
+    ? `https://${process.env.VERCEL_URL}`
+    : "https://francois-os.vercel.app";
+
+  function ttsUrl(text: string): string {
+    return `${BASE_URL}/api/voice-tts?text=${encodeURIComponent(text)}`;
+  }
+
   // Premier appel — accueil + charger mémoire
   if (!speechResult) {
     const memory = await loadVoiceMemory();
@@ -362,10 +370,10 @@ export async function POST(req: Request) {
 
     return new Response(`<?xml version="1.0" encoding="UTF-8"?>
 <Response>
-  <Say voice="Polly.Mathieu" language="fr-FR">${xmlEscape(accueil)}</Say>
+  <Play>${xmlEscape(ttsUrl(accueil))}</Play>
   <Gather input="speech" action="/api/voice" method="POST" language="fr-FR" speechTimeout="auto" timeout="10">
   </Gather>
-  <Say voice="Polly.Mathieu" language="fr-FR">Je t'entends pas bien. Rappelle-moi quand tu peux!</Say>
+  <Play>${xmlEscape(ttsUrl("Je t'entends pas bien. Rappelle-moi quand tu peux!"))}</Play>
   <Hangup/>
 </Response>`, { headers: { "Content-Type": "text/xml" } });
   }
@@ -460,14 +468,22 @@ export async function POST(req: Request) {
       : Promise.resolve(),
   ]);
 
+  const BASE_URL = process.env.VERCEL_URL
+    ? `https://${process.env.VERCEL_URL}`
+    : "https://francois-os.vercel.app";
+
+  function ttsUrl(text: string): string {
+    return `${BASE_URL}/api/voice-tts?text=${encodeURIComponent(text)}`;
+  }
+
   const voiceText = parsed.vocal || "Voilà, c'est réglé.";
 
   return new Response(`<?xml version="1.0" encoding="UTF-8"?>
 <Response>
-  <Say voice="Polly.Mathieu" language="fr-FR">${xmlEscape(voiceText)}</Say>
+  <Play>${xmlEscape(ttsUrl(voiceText))}</Play>
   <Gather input="speech" action="/api/voice" method="POST" language="fr-FR" speechTimeout="auto" timeout="8">
   </Gather>
-  <Say voice="Polly.Mathieu" language="fr-FR">Prends soin de toi François. À bientôt!</Say>
+  <Play>${xmlEscape(ttsUrl("Prends soin de toi François. À bientôt!"))}</Play>
   <Hangup/>
 </Response>`, { headers: { "Content-Type": "text/xml" } });
 }
