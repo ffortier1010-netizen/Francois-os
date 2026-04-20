@@ -5,7 +5,7 @@ import { useState, useRef, useEffect } from "react";
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 type Status = "vert" | "orange" | "rouge" | "noir";
-type Tab = "pipeline" | "taches" | "chat" | "finances" | "leads";
+type Tab = "pipeline" | "taches" | "chat" | "finances" | "leads" | "roadmap";
 
 interface Deal {
   id: string;
@@ -524,6 +524,85 @@ function LeadsTab() {
   );
 }
 
+function RoadmapTab() {
+  const done = [
+    { label: "Dashboard web mobile (PWA installée sur iPhone)", detail: "francois-os.vercel.app" },
+    { label: "7 agents IA niveau sommité", detail: "Broker Pro, Construction, Invest, Stratège, Family, Body, Document" },
+    { label: "SMS bidirectionnel avec Léo", detail: "Chat, proxy SMS contacts, recherche documents" },
+    { label: "Mémoire SMS — Léo se souvient des conversations", detail: "Redis 24h" },
+    { label: "Google Drive — documents classés et accessibles par SMS", detail: "5 dossiers organisés" },
+    { label: "Briefing quotidien 6h AM par email", detail: "Emails + priorités + objectifs 90J" },
+    { label: "Veille immobilière automatique 7h AM", detail: "Scan Gmail + scoring A/B/C" },
+    { label: "Appel vocal — parle à Léo mains libres", detail: "Twilio Voice configuré" },
+    { label: "CRM complet avec statuts et notes", detail: "Onglet Leads dans l'app" },
+    { label: "Page publique de leads professionnelle", detail: "francois-os.vercel.app/leads" },
+    { label: "SMS instant quand nouveau lead entre", detail: "Notification automatique" },
+    { label: "CRM auto via SMS — Léo met à jour le pipeline", detail: "Détection intelligente" },
+    { label: "Dashboard Finances — KPIs et progression 90J", detail: "Onglet $ dans l'app" },
+    { label: "Mac Mini toujours allumé — Léo disponible 24/7", detail: "pmset sleep 0" },
+    { label: "Proxy SMS — Léo envoie des messages à tes contacts", detail: "Ex: avise ma femme" },
+  ];
+
+  const next = [
+    { label: "LinkedIn — lien lead form dans ta bio", detail: "2 min — à faire manuellement", urgent: true },
+    { label: "Voix — tester l'appel vocal Léo", detail: "Appelle ton numéro Twilio pour valider", urgent: true },
+    { label: "Facebook/Instagram — webhook Lead Ads", detail: "Connecter tes futures campagnes Meta au CRM" },
+    { label: "Site web professionnel François Fortier", detail: "Page courtier commercial avec SEO Rive-Nord" },
+    { label: "Notifications push sur iPhone", detail: "Alertes instantanées nouveaux leads" },
+    { label: "Suivi automatique emails chantier", detail: "Léo lit tes emails sous-traitants et flag les urgences" },
+    { label: "Google Ads landing page", detail: "Page optimisée pour conversion campagnes Google" },
+    { label: "Tableau de bord financier avec vrais chiffres", detail: "Revenus réels, dépenses, cashflow projets" },
+    { label: "Import contacts LinkedIn dans le CRM", detail: "Connecter Sales Navigator ou export CSV" },
+    { label: "Agent WEALTH BUILDER", detail: "Stratégie patrimoine, fiscalité entrepreneur QC" },
+    { label: "Agent MINDSET COACH", detail: "Performance mentale, focus, résilience sous pression" },
+  ];
+
+  return (
+    <div className="flex flex-col gap-3 pb-4">
+      {/* En cours */}
+      <div style={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: "16px", padding: "16px" }}>
+        <div className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: "var(--gold)" }}>
+          ✅ Complété — {done.length} fonctionnalités
+        </div>
+        <div className="space-y-2">
+          {done.map((item, i) => (
+            <div key={i} className="flex items-start gap-2">
+              <div className="mt-0.5 w-4 h-4 rounded-full flex items-center justify-center shrink-0" style={{ background: "#27AE6022" }}>
+                <span style={{ color: "#27AE60", fontSize: "9px" }}>✓</span>
+              </div>
+              <div>
+                <div className="text-xs font-medium" style={{ color: "var(--text)" }}>{item.label}</div>
+                <div className="text-xs" style={{ color: "var(--muted)" }}>{item.detail}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* À faire */}
+      <div style={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: "16px", padding: "16px" }}>
+        <div className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: "#38BDF8" }}>
+          🔨 À construire — {next.length} étapes
+        </div>
+        <div className="space-y-2">
+          {next.map((item, i) => (
+            <div key={i} className="flex items-start gap-2">
+              <div className="mt-0.5 w-4 h-4 rounded-full border-2 shrink-0" style={{ borderColor: item.urgent ? "#C9A84C" : "var(--border)" }} />
+              <div>
+                <div className="text-xs font-medium flex items-center gap-1">
+                  <span style={{ color: "var(--text)" }}>{item.label}</span>
+                  {item.urgent && <span className="text-xs px-1.5 py-0.5 rounded" style={{ background: "#C9A84C22", color: "#C9A84C", fontSize: "10px" }}>URGENT</span>}
+                </div>
+                <div className="text-xs" style={{ color: "var(--muted)" }}>{item.detail}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function FinancesTab({ deals }: { deals: Deal[] }) {
   const pipelineTotal = deals
     .filter(d => d.statut !== "noir")
@@ -832,6 +911,7 @@ export default function Home() {
         {tab === "taches" && <TachesTab taches={taches} setTaches={setTaches} />}
         {tab === "leads" && <LeadsTab />}
         {tab === "finances" && <FinancesTab deals={deals} />}
+        {tab === "roadmap" && <RoadmapTab />}
         {tab === "chat" && <ChatTab />}
       </div>
 
@@ -842,6 +922,7 @@ export default function Home() {
             { id: "pipeline", icon: "📊", label: "Pipeline", badge: activeDeals },
             { id: "leads", icon: "🎯", label: "Leads", badge: 0 },
             { id: "finances", icon: "$", label: "Finances", badge: 0 },
+            { id: "roadmap", icon: "🗺", label: "Roadmap", badge: 0 },
             { id: "chat", icon: "⚡", label: "Chat", badge: 0 },
           ] as const).map(item => (
             <button
