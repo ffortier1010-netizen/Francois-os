@@ -549,16 +549,21 @@ export default function Home() {
   const [taches, setTachesRaw] = useState<Tache[]>(INIT_TACHES);
   const [loaded, setLoaded] = useState(false);
 
-  // Chargement initial depuis le serveur
+  // Chargement + sync temps réel (toutes les 30 secondes)
   useEffect(() => {
-    fetch("/api/data")
-      .then(r => r.json())
-      .then(data => {
-        if (data.deals) setDealsRaw(data.deals);
-        if (data.taches) setTachesRaw(data.taches);
-        setLoaded(true);
-      })
-      .catch(() => setLoaded(true));
+    const load = () => {
+      fetch("/api/data")
+        .then(r => r.json())
+        .then(data => {
+          if (data.deals) setDealsRaw(data.deals);
+          if (data.taches) setTachesRaw(data.taches);
+          setLoaded(true);
+        })
+        .catch(() => setLoaded(true));
+    };
+    load();
+    const interval = setInterval(load, 30000);
+    return () => clearInterval(interval);
   }, []);
 
   // Wrappers qui sauvegardent automatiquement
