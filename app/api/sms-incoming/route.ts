@@ -13,10 +13,59 @@ Agents disponibles : [BROKER PRO], [CONSTRUCTION OPS], [INVEST ANALYZER], [STRAT
 
 Tu réponds par SMS — sois ultra court (max 160 caractères si possible), direct, en français. Pas de validation inutile. Challenge François quand c'est pertinent.`;
 
-const DOC_KEYWORDS = ["envoie", "document", "fichier", "budget", "contrat", "rapport", "analyse", "find", "cherche", "trouve", "envoyer", "envoi"];
+const DOC_KEYWORDS = ["document", "fichier", "budget", "contrat", "rapport", "analyse", "find", "cherche"];
 
-function isDocumentRequest(message: string): boolean {
-  return DOC_KEYWORDS.some(k => message.toLowerCase().includes(k));
+const PROXY_KEYWORDS = ["avise", "avertis", "dis à", "dis a", "texte à", "texte a", "envoie un message", "préviens", "previens", "contacte", "écris à", "ecris a", "envoie un sms", "envoie a", "envoie à"];
+
+function isDocumentRequest(msg: string): boolean {
+  const lower = msg.toLowerCase();
+  return (lower.includes("envoie") || lower.includes("trouve") || lower.includes("envoi")) &&
+    DOC_KEYWORDS.some(k => lower.includes(k));
+}
+
+function isProxySMSRequest(msg: string): boolean {
+  const lower = msg.toLowerCase();
+  return PROXY_KEYWORDS.some(k => lower.includes(k));
+}
+
+function getContacts(): Record<string, string> {
+  try {
+    return JSON.parse(process.env.LEO_CONTACTS || "{}");
+  } catch {
+    return {};
+  }
+}
+
+function findContact(message: string, contacts: Record<string, string>): { name: string; number: string } | null {
+  const lower = message.toLowerCase();
+  for (const [name, number] of Object.entries(contacts)) {
+    if (lower.includes(name.toLowerCase())) {
+      return { name, number };
+    }
+  }
+  return null;
+}
+
+async function composeProxyMessage(originalRequest: string, recipientName: string): Promise<string> {
+  const res = await fetch("https://api.anthropic.com/v1/messages", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-api-key": process.env.ANTHROPIC_API_KEY!,
+      "anthropic-version": "2023-06-01",
+    },
+    body: JSON.stringify({
+      model: "claude-haiku-4-5-20251001",
+      max_tokens: 160,
+      system: `Tu es Léo Atlas, le copilote de François Fortier. François te demande d'envoyer un message de sa part à ${recipientName}.
+Compose un SMS court, naturel et professionnel de la part de François.
+Commence directement par le message — pas de "Bonjour je suis Léo".
+Signe "— François" à la fin. Max 140 caractères.`,
+      messages: [{ role: "user", content: originalRequest }],
+    }),
+  });
+  const data = await res.json();
+  return data.content?.[0]?.text ?? "";
 }
 
 async function getGoogleAccessToken(creds: Record<string, string>): Promise<string> {
@@ -45,7 +94,7 @@ async function getGoogleAccessToken(creds: Record<string, string>): Promise<stri
   });
 
   const data = await res.json();
-  return data.access_token;
+  return data.access_token || JSON.stringify(data);
 }
 
 async function searchGoogleDrive(query: string): Promise<{ name: string; link: string }[]> {
@@ -61,15 +110,10 @@ async function searchGoogleDrive(query: string): Promise<{ name: string; link: s
     : `trashed=false and mimeType!='application/vnd.google-apps.folder'`;
 
   const url = `https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(q)}&fields=files(id,name,webViewLink)&orderBy=modifiedTime+desc&pageSize=5`;
-
-  const res = await fetch(url, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
-
+  const res = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
   const data = await res.json();
   const files = data.files || [];
 
-  // Rendre chaque fichier accessible publiquement
   for (const file of files) {
     await fetch(`https://www.googleapis.com/drive/v3/files/${file.id}/permissions`, {
       method: "POST",
@@ -103,6 +147,26 @@ export async function POST(req: Request) {
 
     if (!message || !from) return new Response("OK", { status: 200 });
 
+    // 1. Demande d'envoi SMS à un contact ?
+    if (isProxySMSRequest(message)) {
+      const contacts = getContacts();
+      const contact = findContact(message, contacts);
+
+      if (!contact) {
+        await sendSMS(from, "Contact introuvable. Dis-moi le nom exact — ex: 'avise ma femme'.");
+      } else {
+        const composed = await composeProxyMessage(message, contact.name);
+        if (composed) {
+          await sendSMS(contact.number, composed);
+          await sendSMS(from, `✓ SMS envoyé à ${contact.name}:\n"${composed}"`);
+        } else {
+          await sendSMS(from, "Erreur lors de la rédaction du message.");
+        }
+      }
+      return new Response("OK", { status: 200 });
+    }
+
+    // 2. Demande de document ?
     if (isDocumentRequest(message)) {
       try {
         const files = await searchGoogleDrive(message);
@@ -112,7 +176,7 @@ export async function POST(req: Request) {
           await sendSMS(from, `📄 ${files[0].name}\n${files[0].link}`);
         } else {
           const list = files.slice(0, 3).map((f: { name: string; link: string }, i: number) => `${i + 1}. ${f.name}\n${f.link}`).join("\n\n");
-          await sendSMS(from, `📁 ${files.length} docs trouvés:\n\n${list}`);
+          await sendSMS(from, `📁 ${files.length} docs:\n\n${list}`);
         }
       } catch (err) {
         console.error("Drive error:", err);
@@ -121,6 +185,7 @@ export async function POST(req: Request) {
       return new Response("OK", { status: 200 });
     }
 
+    // 3. Réponse Léo Atlas standard
     const res = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
       headers: {
