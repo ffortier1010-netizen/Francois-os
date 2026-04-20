@@ -5,7 +5,7 @@ import { useState, useRef, useEffect } from "react";
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 type Status = "vert" | "orange" | "rouge" | "noir";
-type Tab = "pipeline" | "taches" | "chat" | "finances";
+type Tab = "pipeline" | "taches" | "chat" | "finances" | "leads";
 
 interface Deal {
   id: string;
@@ -26,6 +26,23 @@ interface Tache {
 interface Message {
   role: "user" | "assistant";
   content: string;
+}
+
+interface Lead {
+  id: string;
+  prenom: string;
+  nom: string;
+  email: string;
+  telephone: string;
+  type: string;
+  propriete: string;
+  valeur: string;
+  message: string;
+  source: string;
+  statut: "nouveau" | "contacté" | "qualifié" | "rencontre" | "mandat" | "fermé";
+  notes: string;
+  createdAt: string;
+  prochainSuivi: string;
 }
 
 // ─── Données initiales ────────────────────────────────────────────────────────
@@ -317,6 +334,191 @@ function TachesTab({ taches, setTaches }: { taches: Tache[]; setTaches: (t: Tach
         >
           + Nouvelle tâche
         </button>
+      )}
+    </div>
+  );
+}
+
+const STATUT_LEAD_COLOR: Record<string, string> = {
+  nouveau: "#C9A84C",
+  "contacté": "#38BDF8",
+  qualifié: "#A78BFA",
+  rencontre: "#FB923C",
+  mandat: "#34D399",
+  fermé: "#6B7280",
+};
+
+function LeadsTab() {
+  const [leads, setLeads] = useState<Lead[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [selected, setSelected] = useState<Lead | null>(null);
+  const [note, setNote] = useState("");
+
+  useEffect(() => {
+    fetch("/api/leads")
+      .then(r => r.json())
+      .then(d => { setLeads(d.leads || []); setLoading(false); });
+  }, []);
+
+  const updateStatut = async (id: string, statut: string) => {
+    await fetch("/api/leads", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id, updates: { statut } }),
+    });
+    setLeads(leads.map(l => l.id === id ? { ...l, statut: statut as Lead["statut"] } : l));
+    if (selected?.id === id) setSelected(prev => prev ? { ...prev, statut: statut as Lead["statut"] } : null);
+  };
+
+  const addNote = async () => {
+    if (!selected || !note.trim()) return;
+    const newNotes = (selected.notes || "") + `\n[${new Date().toLocaleDateString("fr-CA")}] ${note}`;
+    await fetch("/api/leads", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id: selected.id, updates: { notes: newNotes, lastContact: new Date().toISOString() } }),
+    });
+    setLeads(leads.map(l => l.id === selected.id ? { ...l, notes: newNotes } : l));
+    setSelected(prev => prev ? { ...prev, notes: newNotes } : null);
+    setNote("");
+  };
+
+  const typeLabel: Record<string, string> = {
+    vendeur: "Vendeur", acheteur: "Acheteur", investisseur: "Investisseur",
+    evaluation: "Évaluation", autre: "Autre"
+  };
+
+  if (loading) return <div style={{ textAlign: "center", padding: "40px", color: "var(--muted)" }}>Chargement...</div>;
+
+  if (selected) {
+    return (
+      <div className="flex flex-col gap-3 pb-4">
+        <button onClick={() => setSelected(null)} className="text-left text-sm font-semibold" style={{ color: "var(--gold)" }}>
+          ← Retour aux leads
+        </button>
+        <div style={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: "16px", padding: "20px" }}>
+          <div className="flex items-center justify-between mb-3">
+            <div>
+              <div className="font-bold text-base">{selected.prenom} {selected.nom}</div>
+              <div className="text-xs mt-0.5" style={{ color: "var(--muted)" }}>{typeLabel[selected.type]} · {selected.source}</div>
+            </div>
+            <span className="text-xs font-bold px-2 py-1 rounded-full" style={{ background: STATUT_LEAD_COLOR[selected.statut] + "22", color: STATUT_LEAD_COLOR[selected.statut] }}>
+              {selected.statut.toUpperCase()}
+            </span>
+          </div>
+          <div className="space-y-2 text-sm" style={{ color: "var(--muted)" }}>
+            {selected.telephone && <div>📞 <span style={{ color: "var(--text)" }}>{selected.telephone}</span></div>}
+            {selected.email && <div>📧 <span style={{ color: "var(--text)" }}>{selected.email}</span></div>}
+            {selected.propriete && <div>🏢 <span style={{ color: "var(--text)" }}>{selected.propriete}</span></div>}
+            {selected.valeur && <div>💰 <span style={{ color: "var(--gold)", fontWeight: "700" }}>{selected.valeur}</span></div>}
+            {selected.message && <div className="mt-2 p-3 rounded-lg text-xs" style={{ background: "var(--card2)", color: "var(--text)" }}>{selected.message}</div>}
+          </div>
+        </div>
+
+        {/* Changer statut */}
+        <div style={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: "16px", padding: "16px" }}>
+          <div className="text-xs font-bold uppercase mb-3" style={{ color: "var(--muted)" }}>Statut</div>
+          <div className="flex flex-wrap gap-2">
+            {(["nouveau", "contacté", "qualifié", "rencontre", "mandat", "fermé"] as const).map(s => (
+              <button
+                key={s}
+                onClick={() => updateStatut(selected.id, s)}
+                className="text-xs font-bold px-3 py-1.5 rounded-full transition-all"
+                style={selected.statut === s
+                  ? { background: STATUT_LEAD_COLOR[s], color: "#000" }
+                  : { background: STATUT_LEAD_COLOR[s] + "22", color: STATUT_LEAD_COLOR[s] }
+                }
+              >
+                {s}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Notes */}
+        <div style={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: "16px", padding: "16px" }}>
+          <div className="text-xs font-bold uppercase mb-3" style={{ color: "var(--muted)" }}>Notes</div>
+          {selected.notes && (
+            <div className="text-xs mb-3 whitespace-pre-wrap" style={{ color: "var(--muted)" }}>{selected.notes}</div>
+          )}
+          <div className="flex gap-2">
+            <input
+              value={note}
+              onChange={e => setNote(e.target.value)}
+              placeholder="Ajouter une note..."
+              className="flex-1 rounded-lg px-3 py-2 text-sm outline-none"
+              style={{ background: "var(--card2)", border: "1px solid var(--border)", color: "var(--text)" }}
+              onKeyDown={e => e.key === "Enter" && addNote()}
+            />
+            <button onClick={addNote} className="px-3 py-2 rounded-lg text-sm font-semibold" style={{ background: "var(--gold)", color: "#000" }}>
+              +
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  const nouveau = leads.filter(l => l.statut === "nouveau").length;
+
+  return (
+    <div className="flex flex-col gap-3 pb-4">
+      {/* Stats */}
+      <div className="grid grid-cols-3 gap-2">
+        <div style={{ background: "var(--card)", border: "1px solid var(--border)" }} className="rounded-xl p-3 text-center">
+          <div className="text-xl font-bold" style={{ color: "var(--gold)" }}>{leads.length}</div>
+          <div className="text-xs mt-0.5" style={{ color: "var(--muted)" }}>Total leads</div>
+        </div>
+        <div style={{ background: "var(--card)", border: `1px solid ${nouveau > 0 ? "#C9A84C" : "var(--border)"}` }} className="rounded-xl p-3 text-center">
+          <div className="text-xl font-bold text-amber-400">{nouveau}</div>
+          <div className="text-xs mt-0.5" style={{ color: "var(--muted)" }}>Nouveaux</div>
+        </div>
+        <div style={{ background: "var(--card)", border: "1px solid var(--border)" }} className="rounded-xl p-3 text-center">
+          <div className="text-xl font-bold text-emerald-400">{leads.filter(l => l.statut === "mandat").length}</div>
+          <div className="text-xs mt-0.5" style={{ color: "var(--muted)" }}>Mandats</div>
+        </div>
+      </div>
+
+      {/* Lien formulaire */}
+      <a href="/leads" target="_blank" style={{ background: "var(--card)", border: "1px dashed var(--gold)", borderRadius: "12px", padding: "12px 16px", display: "flex", alignItems: "center", justifyContent: "space-between", textDecoration: "none" }}>
+        <span className="text-sm font-semibold" style={{ color: "var(--gold)" }}>🔗 Page de capture de leads</span>
+        <span className="text-xs" style={{ color: "var(--muted)" }}>francois-os.vercel.app/leads →</span>
+      </a>
+
+      {/* Liste leads */}
+      {leads.length === 0 ? (
+        <div style={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: "16px", padding: "32px", textAlign: "center" }}>
+          <div className="text-3xl mb-3">🎯</div>
+          <div className="text-sm font-semibold mb-1">Aucun lead pour l'instant</div>
+          <div className="text-xs" style={{ color: "var(--muted)" }}>Partage ta page de leads pour commencer</div>
+        </div>
+      ) : (
+        <div className="space-y-2">
+          {leads.map(lead => (
+            <button
+              key={lead.id}
+              onClick={() => setSelected(lead)}
+              className="w-full text-left rounded-xl p-4 transition-opacity active:opacity-70"
+              style={{ background: "var(--card)", border: `1px solid ${lead.statut === "nouveau" ? "#C9A84C44" : "var(--border)"}` }}
+            >
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="font-semibold text-sm">{lead.prenom} {lead.nom}</div>
+                  <div className="text-xs mt-0.5" style={{ color: "var(--muted)" }}>{typeLabel[lead.type]} · {lead.valeur || "Valeur non précisée"}</div>
+                </div>
+                <span className="text-xs font-bold px-2 py-1 rounded-full shrink-0" style={{ background: STATUT_LEAD_COLOR[lead.statut] + "22", color: STATUT_LEAD_COLOR[lead.statut] }}>
+                  {lead.statut}
+                </span>
+              </div>
+              {lead.propriete && (
+                <div className="mt-2 text-xs truncate" style={{ color: "var(--muted)" }}>🏢 {lead.propriete}</div>
+              )}
+              <div className="mt-1 text-xs" style={{ color: "var(--muted)" }}>
+                {new Date(lead.createdAt).toLocaleDateString("fr-CA")} · {lead.source}
+              </div>
+            </button>
+          ))}
+        </div>
       )}
     </div>
   );
@@ -628,8 +830,9 @@ export default function Home() {
       <div className="flex-1 overflow-y-auto px-4 pt-4" style={{ display: tab === "chat" ? "flex" : "block", flexDirection: "column" }}>
         {tab === "pipeline" && <PipelineTab deals={deals} setDeals={setDeals} />}
         {tab === "taches" && <TachesTab taches={taches} setTaches={setTaches} />}
-        {tab === "chat" && <ChatTab />}
+        {tab === "leads" && <LeadsTab />}
         {tab === "finances" && <FinancesTab deals={deals} />}
+        {tab === "chat" && <ChatTab />}
       </div>
 
       {/* Bottom nav */}
@@ -637,7 +840,7 @@ export default function Home() {
         <div className="flex gap-1 rounded-2xl p-1" style={{ background: "var(--card)" }}>
           {([
             { id: "pipeline", icon: "📊", label: "Pipeline", badge: activeDeals },
-            { id: "taches", icon: "✓", label: "Tâches", badge: pendingTaches },
+            { id: "leads", icon: "🎯", label: "Leads", badge: 0 },
             { id: "finances", icon: "$", label: "Finances", badge: 0 },
             { id: "chat", icon: "⚡", label: "Chat", badge: 0 },
           ] as const).map(item => (
