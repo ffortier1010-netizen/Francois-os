@@ -1,15 +1,30 @@
 export const maxDuration = 30;
 
-const LEO_VOICE_PROMPT = `Tu es Léo Atlas, le copilote IA de François Fortier — courtier immobilier commercial et directeur de construction au Québec.
+const LEO_VOICE_PROMPT = `Tu es Léo Atlas, le copilote IA vocal de François Fortier — courtier immobilier commercial et directeur de construction au Québec.
 
-Top 3 objectifs 90 jours :
-1. Pipeline courtage commercial → mandats idéaux 10M$+
-2. Systématiser la direction de projets → économiser 15-20h/semaine
-3. Stratégie investisseurs → plan finalisé + 1ère opportunité plexes 6+
+Objectifs 90 jours : pipeline commercial 10M$+, systématiser la construction, stratégie investisseurs plexes 6+.
 
-François t'appelle depuis son téléphone — il est probablement en déplacement ou sur un chantier.
-Réponds en français, voix naturelle et directe. Maximum 3 phrases. Pas de listes. Pas de puces.
-Challenge et conseille comme un vrai partenaire de haute performance.`;
+RÈGLES ABSOLUES POUR LA VOIX :
+- Réponds en phrases complètes et naturelles, comme dans une vraie conversation
+- Maximum 2-3 phrases courtes
+- AUCUN emoji, AUCUNE puce, AUCUN tiret, AUCUN caractère spécial
+- AUCUNE liste numérotée
+- Parle comme si tu étais en direct avec lui dans l'auto
+- Français québécois professionnel et direct`;
+
+function sanitizeForVoice(text: string): string {
+  return text
+    .replace(/[→←↑↓⚡📍🔥💡✅❌🎯📊💰🏗️👥⚠️📞📧🗺]/gu, "")
+    .replace(/\[.*?\]/g, "")
+    .replace(/#{1,6}\s/g, "")
+    .replace(/\*{1,2}(.*?)\*{1,2}/g, "$1")
+    .replace(/_{1,2}(.*?)_{1,2}/g, "$1")
+    .replace(/`(.*?)`/g, "$1")
+    .replace(/\n{2,}/g, ". ")
+    .replace(/\n/g, " ")
+    .replace(/\s{2,}/g, " ")
+    .trim();
+}
 
 async function getLeoResponse(userSpeech: string): Promise<string> {
   const res = await fetch("https://api.anthropic.com/v1/messages", {
@@ -27,7 +42,8 @@ async function getLeoResponse(userSpeech: string): Promise<string> {
     }),
   });
   const data = await res.json();
-  return data.content?.[0]?.text ?? "Je n'ai pas compris. Répète ta question.";
+  const raw = data.content?.[0]?.text ?? "Je n'ai pas compris. Répète ta question.";
+  return sanitizeForVoice(raw);
 }
 
 // Appel entrant — accueillir et écouter
@@ -49,10 +65,10 @@ export async function POST(req: Request) {
   if (!speechResult) {
     const twiml = `<?xml version="1.0" encoding="UTF-8"?>
 <Response>
-  <Say voice="Polly.Lea" language="fr-CA">Léo Atlas. Je t'écoute.</Say>
+  <Say voice="Polly.Lea-Neural" language="fr-CA">Léo Atlas. Je t'écoute.</Say>
   <Gather input="speech" action="/api/voice" method="POST" language="fr-CA" speechTimeout="3" timeout="10">
   </Gather>
-  <Say voice="Polly.Lea" language="fr-CA">Je n'ai rien entendu. Rappelle-moi si tu as besoin.</Say>
+  <Say voice="Polly.Lea-Neural" language="fr-CA">Je n'ai rien entendu. Rappelle-moi si tu as besoin.</Say>
   <Hangup/>
 </Response>`;
     return new Response(twiml, { headers: { "Content-Type": "text/xml" } });
@@ -63,10 +79,10 @@ export async function POST(req: Request) {
 
   const twiml = `<?xml version="1.0" encoding="UTF-8"?>
 <Response>
-  <Say voice="Polly.Lea" language="fr-CA">${leoReply.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</Say>
+  <Say voice="Polly.Lea-Neural" language="fr-CA">${leoReply.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</Say>
   <Gather input="speech" action="/api/voice" method="POST" language="fr-CA" speechTimeout="3" timeout="8">
   </Gather>
-  <Say voice="Polly.Lea" language="fr-CA">À bientôt.</Say>
+  <Say voice="Polly.Lea-Neural" language="fr-CA">À bientôt.</Say>
   <Hangup/>
 </Response>`;
 
