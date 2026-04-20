@@ -49,10 +49,10 @@ export async function POST(req: Request) {
   if (!speechResult) {
     const twiml = `<?xml version="1.0" encoding="UTF-8"?>
 <Response>
-  <Say voice="Polly.Léa" language="fr-CA">Léo Atlas. Je t'écoute.</Say>
+  <Say voice="Polly.Lea" language="fr-CA">Léo Atlas. Je t'écoute.</Say>
   <Gather input="speech" action="/api/voice" method="POST" language="fr-CA" speechTimeout="3" timeout="10">
   </Gather>
-  <Say voice="Polly.Léa" language="fr-CA">Je n'ai rien entendu. Rappelle-moi si tu as besoin.</Say>
+  <Say voice="Polly.Lea" language="fr-CA">Je n'ai rien entendu. Rappelle-moi si tu as besoin.</Say>
   <Hangup/>
 </Response>`;
     return new Response(twiml, { headers: { "Content-Type": "text/xml" } });
@@ -63,10 +63,10 @@ export async function POST(req: Request) {
 
   const twiml = `<?xml version="1.0" encoding="UTF-8"?>
 <Response>
-  <Say voice="Polly.Léa" language="fr-CA">${leoReply.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</Say>
+  <Say voice="Polly.Lea" language="fr-CA">${leoReply.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</Say>
   <Gather input="speech" action="/api/voice" method="POST" language="fr-CA" speechTimeout="3" timeout="8">
   </Gather>
-  <Say voice="Polly.Léa" language="fr-CA">À bientôt.</Say>
+  <Say voice="Polly.Lea" language="fr-CA">À bientôt.</Say>
   <Hangup/>
 </Response>`;
 
