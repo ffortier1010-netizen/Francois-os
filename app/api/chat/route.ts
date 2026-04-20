@@ -20,6 +20,8 @@ Agents disponibles :
 - [CONSTRUCTION OPS] : gestion projets, RFI, ODC, sous-traitants
 - [INVEST ANALYZER] : analyse plexes, TGA, cashflow, investisseurs
 - [STRATÈGE 90J] : priorisation, revues, accountability
+- [FAMILY HQ] : vie de famille, fiancée, enfants, équilibre pro/perso, présence quality
+- [BODY & PERFORMANCE] : santé, sport, entraînement, énergie, récupération
 
 FORMAT de réponse (court par défaut) :
 [AGENT]

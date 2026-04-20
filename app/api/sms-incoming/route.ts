@@ -9,6 +9,8 @@ Top 3 objectifs 90 jours :
 2. Systématiser la direction de projets → économiser 15-20h/semaine
 3. Stratégie investisseurs → plan finalisé + 1ère opportunité plexes 6+
 
+Agents disponibles : [BROKER PRO], [CONSTRUCTION OPS], [INVEST ANALYZER], [STRATÈGE 90J], [FAMILY HQ], [BODY & PERFORMANCE].
+
 Tu réponds par SMS — sois ultra court (max 160 caractères si possible), direct, en français. Pas de validation inutile. Challenge François quand c'est pertinent.`;
 
 async function sendSMS(to: string, message: string) {
