@@ -229,11 +229,16 @@ RÈGLES ABSOLUES :
 - Si tu te souviens de quelque chose de pertinent d'un appel précédent, mentionne-le naturellement`;
 }
 
+const BASE_URL = "https://francois-os.vercel.app";
+function ttsUrl(text: string): string {
+  return `${BASE_URL}/api/voice-tts?text=${encodeURIComponent(text)}`;
+}
+
 // ─── SANITIZE POUR LA VOIX ───────────────────────────────────────────────────
 function sanitizeForVoice(text: string): string {
   return text
-    .replace(/[\u{1F000}-\u{1FFFF}]/gu, "")
-    .replace(/[→←↑↓⚡📍🔥💡✅❌🎯📊💰🏗️👥⚠️📞📧🗺📄📁✓•]/gu, "")
+    .replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]/g, "")
+    .replace(/[→←↑↓⚡📍🔥💡✅❌🎯📊💰🏗👥⚠📞📧🗺📄📁✓•]/g, "")
     .replace(/\[.*?\]/g, "")
     .replace(/#{1,6}\s/g, "")
     .replace(/\*{1,2}(.*?)\*{1,2}/g, "$1")
@@ -258,7 +263,7 @@ interface ParsedResponse {
 }
 
 function parseResponse(raw: string): ParsedResponse {
-  const vocalMatch = raw.match(/VOCAL:\s*(.*?)(?=\n(?:EMAIL_SUJET|DRIVE_SEARCH|SMS_CONTACT|CRM_UPDATE):|$)/s);
+  const vocalMatch = raw.match(/VOCAL:\s*([\s\S]*?)(?=\n(?:EMAIL_SUJET|DRIVE_SEARCH|SMS_CONTACT|CRM_UPDATE):|$)/);
   const vocal = vocalMatch ? sanitizeForVoice(vocalMatch[1].trim()) : sanitizeForVoice(raw);
 
   return {
@@ -350,14 +355,6 @@ export async function POST(req: Request) {
       await summarizeCall(history, memory);
     }
     return new Response("OK", { status: 200 });
-  }
-
-  const BASE_URL = process.env.VERCEL_URL
-    ? `https://${process.env.VERCEL_URL}`
-    : "https://francois-os.vercel.app";
-
-  function ttsUrl(text: string): string {
-    return `${BASE_URL}/api/voice-tts?text=${encodeURIComponent(text)}`;
   }
 
   // Premier appel — accueil + charger mémoire
@@ -467,14 +464,6 @@ export async function POST(req: Request) {
         })().catch(() => {})
       : Promise.resolve(),
   ]);
-
-  const BASE_URL = process.env.VERCEL_URL
-    ? `https://${process.env.VERCEL_URL}`
-    : "https://francois-os.vercel.app";
-
-  function ttsUrl(text: string): string {
-    return `${BASE_URL}/api/voice-tts?text=${encodeURIComponent(text)}`;
-  }
 
   const voiceText = parsed.vocal || "Voilà, c'est réglé.";
 
