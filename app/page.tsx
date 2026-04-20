@@ -5,7 +5,7 @@ import { useState, useRef, useEffect } from "react";
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 type Status = "vert" | "orange" | "rouge" | "noir";
-type Tab = "pipeline" | "taches" | "chat";
+type Tab = "pipeline" | "taches" | "chat" | "finances";
 
 interface Deal {
   id: string;
@@ -322,6 +322,104 @@ function TachesTab({ taches, setTaches }: { taches: Tache[]; setTaches: (t: Tach
   );
 }
 
+function FinancesTab({ deals }: { deals: Deal[] }) {
+  const pipelineTotal = deals
+    .filter(d => d.statut !== "noir")
+    .reduce((sum, d) => {
+      const val = parseFloat(d.valeur.replace(/[^0-9.]/g, "")) || 0;
+      const unit = d.valeur.toLowerCase().includes("m") ? 1_000_000 : 1;
+      return sum + val * unit;
+    }, 0);
+
+  const commissionEstimee = pipelineTotal * 0.03;
+  const objectifTrimestriel = 150000;
+  const pct = Math.min(100, Math.round((commissionEstimee / objectifTrimestriel) * 100));
+
+  const kpis = [
+    { label: "Pipeline total", value: pipelineTotal >= 1_000_000 ? `${(pipelineTotal / 1_000_000).toFixed(1)}M$` : `${(pipelineTotal / 1000).toFixed(0)}K$`, color: "text-amber-400" },
+    { label: "Commission estimée (3%)", value: commissionEstimee >= 1000 ? `${(commissionEstimee / 1000).toFixed(0)}K$` : `${commissionEstimee.toFixed(0)}$`, color: "text-emerald-400" },
+    { label: "Dossiers actifs", value: deals.filter(d => d.statut === "vert" || d.statut === "orange").length.toString(), color: "text-sky-400" },
+    { label: "Dossiers fermés", value: deals.filter(d => d.statut === "noir").length.toString(), color: "text-zinc-400" },
+  ];
+
+  const objectifs90j = [
+    { n: 1, label: "Pipeline courtage 10M$+", cible: "3 mandats", actuel: deals.filter(d => d.statut === "vert").length + " actifs", pct: Math.min(100, deals.filter(d => d.statut === "vert").length * 33), color: "var(--gold)" },
+    { n: 2, label: "Systématiser construction", cible: "15-20h/sem récupérées", actuel: "En cours", pct: 35, color: "#38BDF8" },
+    { n: 3, label: "Stratégie investisseurs", cible: "1ère opportunité plexes 6+", actuel: "Analyse en cours", pct: 20, color: "#34D399" },
+  ];
+
+  return (
+    <div className="flex flex-col gap-3 pb-4">
+      {/* KPI Grid */}
+      <div className="grid grid-cols-2 gap-2">
+        {kpis.map((k, i) => (
+          <div key={i} style={{ background: "var(--card)", border: "1px solid var(--border)" }} className="rounded-xl p-4">
+            <div className={`text-xl font-bold ${k.color}`}>{k.value}</div>
+            <div className="text-xs mt-1" style={{ color: "var(--muted)" }}>{k.label}</div>
+          </div>
+        ))}
+      </div>
+
+      {/* Objectif commission trimestriel */}
+      <div style={{ background: "var(--card)", border: "1px solid var(--border)" }} className="rounded-xl p-4">
+        <div className="flex justify-between items-center mb-3">
+          <span className="text-sm font-semibold">Objectif commissions Q2</span>
+          <span className="text-sm font-bold" style={{ color: "var(--gold)" }}>{pct}%</span>
+        </div>
+        <div className="w-full rounded-full h-2 mb-1" style={{ background: "var(--border)" }}>
+          <div className="h-2 rounded-full transition-all" style={{ background: "var(--gold)", width: `${pct}%` }} />
+        </div>
+        <div className="flex justify-between text-xs mt-2" style={{ color: "var(--muted)" }}>
+          <span>Estimé : {commissionEstimee >= 1000 ? `${(commissionEstimee / 1000).toFixed(0)}K$` : `${commissionEstimee.toFixed(0)}$`}</span>
+          <span>Cible : {(objectifTrimestriel / 1000).toFixed(0)}K$</span>
+        </div>
+      </div>
+
+      {/* Progression 90J */}
+      <div style={{ background: "var(--card)", border: "1px solid var(--border)" }} className="rounded-xl p-4">
+        <div className="text-sm font-semibold mb-3">Progression — Objectifs 90 jours</div>
+        <div className="space-y-4">
+          {objectifs90j.map(o => (
+            <div key={o.n}>
+              <div className="flex justify-between items-center mb-1">
+                <div>
+                  <span className="text-xs font-bold" style={{ color: o.color }}>#{o.n} </span>
+                  <span className="text-xs">{o.label}</span>
+                </div>
+                <span className="text-xs font-bold" style={{ color: o.color }}>{o.pct}%</span>
+              </div>
+              <div className="w-full rounded-full h-1.5" style={{ background: "var(--border)" }}>
+                <div className="h-1.5 rounded-full transition-all" style={{ background: o.color, width: `${o.pct}%` }} />
+              </div>
+              <div className="flex justify-between text-xs mt-1" style={{ color: "var(--muted)" }}>
+                <span>{o.actuel}</span>
+                <span>Cible : {o.cible}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Breakdown pipeline par statut */}
+      <div style={{ background: "var(--card)", border: "1px solid var(--border)" }} className="rounded-xl p-4">
+        <div className="text-sm font-semibold mb-3">Pipeline par étape</div>
+        {(["vert", "orange", "rouge"] as Status[]).map(s => {
+          const count = deals.filter(d => d.statut === s).length;
+          return (
+            <div key={s} className="flex items-center justify-between py-2" style={{ borderBottom: "1px solid var(--border)" }}>
+              <div className="flex items-center gap-2">
+                <Dot status={s} />
+                <span className="text-sm">{STATUS_LABEL[s]}</span>
+              </div>
+              <span className="text-sm font-bold">{count} dossier{count > 1 ? "s" : ""}</span>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 function ChatTab() {
   const [messages, setMessages] = useState<Message[]>([
     { role: "assistant", content: "Léo Atlas actif. Pipeline: 3 dossiers, contrat qui signe demain. Qu'est-ce qu'on attaque?" }
@@ -526,6 +624,7 @@ export default function Home() {
         {tab === "pipeline" && <PipelineTab deals={deals} setDeals={setDeals} />}
         {tab === "taches" && <TachesTab taches={taches} setTaches={setTaches} />}
         {tab === "chat" && <ChatTab />}
+        {tab === "finances" && <FinancesTab deals={deals} />}
       </div>
 
       {/* Bottom nav */}
@@ -534,6 +633,7 @@ export default function Home() {
           {([
             { id: "pipeline", icon: "📊", label: "Pipeline", badge: activeDeals },
             { id: "taches", icon: "✓", label: "Tâches", badge: pendingTaches },
+            { id: "finances", icon: "$", label: "Finances", badge: 0 },
             { id: "chat", icon: "⚡", label: "Chat", badge: 0 },
           ] as const).map(item => (
             <button
