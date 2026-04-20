@@ -13,19 +13,31 @@ Agents disponibles : [BROKER PRO], [CONSTRUCTION OPS], [INVEST ANALYZER], [STRAT
 
 Tu réponds par SMS — sois ultra court (max 160 caractères si possible), direct, en français. Pas de validation inutile. Challenge François quand c'est pertinent.`;
 
-const DOC_KEYWORDS = ["document", "fichier", "budget", "contrat", "rapport", "analyse", "find", "cherche"];
-
-const PROXY_KEYWORDS = ["avise", "avertis", "dis à", "dis a", "texte à", "texte a", "envoie un message", "préviens", "previens", "contacte", "écris à", "ecris a", "envoie un sms", "envoie a", "envoie à"];
-
-function isDocumentRequest(msg: string): boolean {
-  const lower = msg.toLowerCase();
-  return (lower.includes("envoie") || lower.includes("trouve") || lower.includes("envoi")) &&
-    DOC_KEYWORDS.some(k => lower.includes(k));
-}
-
-function isProxySMSRequest(msg: string): boolean {
-  const lower = msg.toLowerCase();
-  return PROXY_KEYWORDS.some(k => lower.includes(k));
+async function classifyIntent(message: string, contacts: Record<string, string>): Promise<"proxy_sms" | "document" | "chat"> {
+  const contactNames = Object.keys(contacts).join(", ");
+  const res = await fetch("https://api.anthropic.com/v1/messages", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-api-key": process.env.ANTHROPIC_API_KEY!,
+      "anthropic-version": "2023-06-01",
+    },
+    body: JSON.stringify({
+      model: "claude-haiku-4-5-20251001",
+      max_tokens: 10,
+      system: `Classifie ce message en UN seul mot parmi : proxy_sms, document, chat.
+- proxy_sms : François veut envoyer un SMS à quelqu'un (contacts disponibles: ${contactNames})
+- document : François veut récupérer un fichier ou document
+- chat : conversation générale, question, conseil
+Réponds UNIQUEMENT avec le mot exact : proxy_sms, document, ou chat.`,
+      messages: [{ role: "user", content: message }],
+    }),
+  });
+  const data = await res.json();
+  const intent = data.content?.[0]?.text?.trim().toLowerCase();
+  if (intent === "proxy_sms") return "proxy_sms";
+  if (intent === "document") return "document";
+  return "chat";
 }
 
 function getContacts(): Record<string, string> {
@@ -147,13 +159,15 @@ export async function POST(req: Request) {
 
     if (!message || !from) return new Response("OK", { status: 200 });
 
+    const contacts = getContacts();
+    const intent = await classifyIntent(message, contacts);
+
     // 1. Demande d'envoi SMS à un contact ?
-    if (isProxySMSRequest(message)) {
-      const contacts = getContacts();
+    if (intent === "proxy_sms") {
       const contact = findContact(message, contacts);
 
       if (!contact) {
-        await sendSMS(from, "Contact introuvable. Dis-moi le nom exact — ex: 'avise ma femme'.");
+        await sendSMS(from, "Contact introuvable. Contacts disponibles : " + Object.keys(contacts).join(", "));
       } else {
         const composed = await composeProxyMessage(message, contact.name);
         if (composed) {
@@ -167,7 +181,7 @@ export async function POST(req: Request) {
     }
 
     // 2. Demande de document ?
-    if (isDocumentRequest(message)) {
+    if (intent === "document") {
       try {
         const files = await searchGoogleDrive(message);
         if (files.length === 0) {
@@ -185,7 +199,7 @@ export async function POST(req: Request) {
       return new Response("OK", { status: 200 });
     }
 
-    // 3. Réponse Léo Atlas standard
+    // 3. Chat Léo Atlas standard
     const res = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
       headers: {
