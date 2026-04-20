@@ -751,7 +751,7 @@ function ChatTab() {
   };
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col flex-1 min-h-0">
       {/* Messages */}
       <div className="flex-1 overflow-y-auto space-y-3 pb-3">
         {messages.map((m, i) => (
@@ -906,14 +906,19 @@ export default function Home() {
       </div>
 
       {/* Content */}
-      <div className="flex-1 overflow-y-auto px-4 pt-4" style={{ display: tab === "chat" ? "flex" : "block", flexDirection: "column" }}>
-        {tab === "pipeline" && <PipelineTab deals={deals} setDeals={setDeals} />}
-        {tab === "taches" && <TachesTab taches={taches} setTaches={setTaches} />}
-        {tab === "leads" && <LeadsTab />}
-        {tab === "finances" && <FinancesTab deals={deals} />}
-        {tab === "roadmap" && <RoadmapTab />}
-        {tab === "chat" && <ChatTab />}
-      </div>
+      {tab === "chat" ? (
+        <div className="flex-1 min-h-0 px-4 pt-4 flex flex-col">
+          <ChatTab />
+        </div>
+      ) : (
+        <div className="flex-1 overflow-y-auto px-4 pt-4">
+          {tab === "pipeline" && <PipelineTab deals={deals} setDeals={setDeals} />}
+          {tab === "taches" && <TachesTab taches={taches} setTaches={setTaches} />}
+          {tab === "leads" && <LeadsTab />}
+          {tab === "finances" && <FinancesTab deals={deals} />}
+          {tab === "roadmap" && <RoadmapTab />}
+        </div>
+      )}
 
       {/* Bottom nav */}
       <div className="shrink-0 px-4 pb-8 pt-2" style={{ borderTop: "1px solid var(--border)", background: "var(--dark)" }}>
