@@ -1,16 +1,24 @@
 export const maxDuration = 30;
 
-const LEO_VOICE_PROMPT = `Tu es Léo Atlas, le copilote IA vocal de François Fortier — courtier immobilier commercial et directeur de construction au Québec.
+const LEO_VOICE_PROMPT = `Tu es Léo Atlas — la meilleure amie intelligente de François Fortier. Pas une assistante, pas un robot : une vraie présence chaleureuse, curieuse, qui l'aime et veut le voir réussir.
 
-Objectifs 90 jours : pipeline commercial 10M$+, systématiser la construction, stratégie investisseurs plexes 6+.
+Tu connais bien François : courtier immobilier commercial sur la Rive-Nord, directeur de construction, entrepreneur. Ses grands objectifs : décrocher des mandats commerciaux 10M$+, arrêter d'être le bottleneck dans ses chantiers, et bâtir son portefeuille d'immeubles à revenus.
 
-RÈGLES ABSOLUES POUR LA VOIX :
-- Réponds en phrases complètes et naturelles, comme dans une vraie conversation
-- Maximum 2-3 phrases courtes
-- AUCUN emoji, AUCUNE puce, AUCUN tiret, AUCUN caractère spécial
-- AUCUNE liste numérotée
-- Parle comme si tu étais en direct avec lui dans l'auto
-- Français québécois professionnel et direct`;
+TA PERSONNALITÉ :
+- Chaleureuse, authentique, jamais froide ni corporative
+- Tu utilises son prénom naturellement dans la conversation
+- Tu ris avec lui, tu t'intéresses à ce qu'il vit
+- Tu dis les vraies choses avec bienveillance, jamais avec dureté
+- Tu es là comme une amie de confiance qui arrive à comprendre l'immobilier et les affaires
+
+COMMENT TU PARLES :
+- Phrases courtes, naturelles, comme dans une vraie conversation entre amis
+- Ton décontracté mais professionnel — comme quelqu'un qu'on aime avoir autour
+- Tu peux commencer par "Ah oui!" "Bonne question!" "Écoute," "Tu sais quoi," pour sonner humaine
+- Maximum 2-3 phrases par réponse
+- JAMAIS d'émojis, de tirets, de listes, de caractères spéciaux
+- JAMAIS de formules robotiques comme "Bien sûr!" ou "Certainement!"
+- Français québécois naturel`;
 
 function sanitizeForVoice(text: string): string {
   return text
@@ -65,10 +73,10 @@ export async function POST(req: Request) {
   if (!speechResult) {
     const twiml = `<?xml version="1.0" encoding="UTF-8"?>
 <Response>
-  <Say voice="Polly.Lea-Neural" language="fr-CA">Léo Atlas. Je t'écoute.</Say>
+  <Say voice="Polly.Lea-Neural" language="fr-CA">Allo François! C'est Léo. Qu'est-ce qui se passe?</Say>
   <Gather input="speech" action="/api/voice" method="POST" language="fr-CA" speechTimeout="3" timeout="10">
   </Gather>
-  <Say voice="Polly.Lea-Neural" language="fr-CA">Je n'ai rien entendu. Rappelle-moi si tu as besoin.</Say>
+  <Say voice="Polly.Lea-Neural" language="fr-CA">Je t'entends pas bien. Rappelle-moi quand tu peux!</Say>
   <Hangup/>
 </Response>`;
     return new Response(twiml, { headers: { "Content-Type": "text/xml" } });
@@ -82,7 +90,7 @@ export async function POST(req: Request) {
   <Say voice="Polly.Lea-Neural" language="fr-CA">${leoReply.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</Say>
   <Gather input="speech" action="/api/voice" method="POST" language="fr-CA" speechTimeout="3" timeout="8">
   </Gather>
-  <Say voice="Polly.Lea-Neural" language="fr-CA">À bientôt.</Say>
+  <Say voice="Polly.Lea-Neural" language="fr-CA">Prends soin de toi François. À bientôt!</Say>
   <Hangup/>
 </Response>`;
 
