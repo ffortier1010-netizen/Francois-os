@@ -401,23 +401,34 @@ export async function POST(req: Request) {
   const rawResponse = claudeData.content?.[0]?.text ?? "VOCAL: Je n'ai pas bien entendu. Répète ta question.";
   const parsed = parseResponse(rawResponse);
 
-  // Sauvegarder historique + apprentissage + actions en parallèle
-  const updatedHistory = [
-    ...history,
-    { role: "user", content: speechResult },
-    { role: "assistant", content: rawResponse },
-  ];
-
   const contacts: Record<string, string> = (() => {
     try { return JSON.parse(process.env.LEO_CONTACTS || "{}"); } catch { return {}; }
   })();
 
+  // Construire un message d'historique clair avec les actions confirmées
+  // (Claude doit savoir ce qu'il a fait pour répondre aux questions de suivi)
+  const actionsLog: string[] = [];
+  if (parsed.emailSujet) actionsLog.push(`[ACTION COMPLÉTÉE: courriel rédigé et envoyé par texto — Objet: "${parsed.emailSujet}"]`);
+  if (parsed.driveSearch) actionsLog.push(`[ACTION COMPLÉTÉE: recherche Drive pour "${parsed.driveSearch}" — lien envoyé par texto]`);
+  if (parsed.smsContact) actionsLog.push(`[ACTION COMPLÉTÉE: SMS envoyé à ${parsed.smsContact} — Message: "${parsed.smsMessage}"]`);
+  if (parsed.crmUpdate) actionsLog.push(`[ACTION COMPLÉTÉE: CRM mis à jour]`);
+
+  const historyAssistantMessage = actionsLog.length > 0
+    ? `${parsed.vocal}\n${actionsLog.join("\n")}`
+    : parsed.vocal;
+
+  const updatedHistory = [
+    ...history,
+    { role: "user", content: speechResult },
+    { role: "assistant", content: historyAssistantMessage },
+  ];
+
   await Promise.allSettled([
-    // Historique appel
+    // Historique appel — sauvegardé EN PREMIER pour garantir la mémoire
     saveCallHistory(callSid, updatedHistory),
 
     // Apprentissage automatique
-    learnFromExchange(speechResult, parsed.vocal, memory),
+    learnFromExchange(speechResult, historyAssistantMessage, memory),
 
     // Email → SMS
     parsed.emailSujet && parsed.emailCorps
