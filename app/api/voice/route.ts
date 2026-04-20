@@ -362,10 +362,10 @@ export async function POST(req: Request) {
 
     return new Response(`<?xml version="1.0" encoding="UTF-8"?>
 <Response>
-  <Say voice="Polly.Lea-Neural" language="fr-CA">${xmlEscape(accueil)}</Say>
-  <Gather input="speech" action="/api/voice" method="POST" language="fr-CA" speechTimeout="auto" timeout="10">
+  <Say voice="Polly.Remi" language="fr-FR">${xmlEscape(accueil)}</Say>
+  <Gather input="speech" action="/api/voice" method="POST" language="fr-FR" speechTimeout="auto" timeout="10">
   </Gather>
-  <Say voice="Polly.Lea-Neural" language="fr-CA">Je t'entends pas bien. Rappelle-moi quand tu peux!</Say>
+  <Say voice="Polly.Remi" language="fr-FR">Je t'entends pas bien. Rappelle-moi quand tu peux!</Say>
   <Hangup/>
 </Response>`, { headers: { "Content-Type": "text/xml" } });
   }
@@ -464,10 +464,10 @@ export async function POST(req: Request) {
 
   return new Response(`<?xml version="1.0" encoding="UTF-8"?>
 <Response>
-  <Say voice="Polly.Lea-Neural" language="fr-CA">${xmlEscape(voiceText)}</Say>
-  <Gather input="speech" action="/api/voice" method="POST" language="fr-CA" speechTimeout="auto" timeout="8">
+  <Say voice="Polly.Remi" language="fr-FR">${xmlEscape(voiceText)}</Say>
+  <Gather input="speech" action="/api/voice" method="POST" language="fr-FR" speechTimeout="auto" timeout="8">
   </Gather>
-  <Say voice="Polly.Lea-Neural" language="fr-CA">Prends soin de toi François. À bientôt!</Say>
+  <Say voice="Polly.Remi" language="fr-FR">Prends soin de toi François. À bientôt!</Say>
   <Hangup/>
 </Response>`, { headers: { "Content-Type": "text/xml" } });
 }
