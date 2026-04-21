@@ -8,6 +8,12 @@
     { "id": "1", "texte": "Demander référence au client qui signe demain", "fait": false, "objectif": 1 },
     { "id": "2", "texte": "Identifier 3 CPA à contacter cette semaine", "fait": false, "objectif": 1 },
     { "id": "3", "texte": "Créer Google Sheet CRM (7 colonnes)", "fait": false, "objectif": 1 },
-    { "id": "4", "texte": "Confirmer valeur réelle des 2 terrains", "fait": false, "objectif": 1 }
+    { "id": "4", "texte": "Confirmer valeur réelle des 2 terrains", "fait": false, "objectif": 1 },
+    { "id": "5", "texte": "[Du Cartier] Confirmer courtier hypothécaire (avec Serge)", "fait": false, "objectif": 1 },
+    { "id": "6", "texte": "[Du Cartier] Établir partenariat notaire commercial", "fait": false, "objectif": 1 },
+    { "id": "7", "texte": "[Du Cartier] Finaliser offre courtier — structure tarifaire + processus", "fait": false, "objectif": 1 },
+    { "id": "8", "texte": "[Du Cartier] Finaliser offre client — proposition de valeur intégrée", "fait": false, "objectif": 1 },
+    { "id": "9", "texte": "[Du Cartier] Évaluer et choisir CRM (avec François Pesant)", "fait": false, "objectif": 1 },
+    { "id": "10", "texte": "[Du Cartier] Programmer prochaine rencontre avec Serge et François Pesant", "fait": false, "objectif": 1 }
   ]
 }

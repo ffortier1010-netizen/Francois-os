@@ -1119,9 +1119,9 @@ export default function Home() {
         <div className="flex gap-1 rounded-2xl p-1" style={{ background: "var(--card)" }}>
           {([
             { id: "pipeline", icon: "📊", label: "Pipeline", badge: activeDeals },
+            { id: "taches", icon: "✅", label: "Tâches", badge: pendingTaches },
             { id: "leads", icon: "🎯", label: "Leads", badge: 0 },
             { id: "calendrier", icon: "📅", label: "Agenda", badge: 0 },
-            { id: "finances", icon: "$", label: "Finances", badge: 0 },
             { id: "chat", icon: "⚡", label: "Chat", badge: 0 },
           ] as const).map(item => (
             <button
