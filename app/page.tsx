@@ -5,7 +5,7 @@ import { useState, useRef, useEffect } from "react";
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 type Status = "vert" | "orange" | "rouge" | "noir";
-type Tab = "pipeline" | "taches" | "chat" | "finances" | "leads" | "roadmap";
+type Tab = "pipeline" | "taches" | "chat" | "finances" | "leads" | "roadmap" | "calendrier";
 
 interface Deal {
   id: string;
@@ -524,6 +524,193 @@ function LeadsTab() {
   );
 }
 
+// ─── Calendrier ───────────────────────────────────────────────────────────────
+interface CalEvent {
+  id: string;
+  titre: string;
+  debut: string;
+  fin: string;
+  lieu: string;
+  description: string;
+  toutJournee: boolean;
+}
+
+function CalendarTab() {
+  const [events, setEvents] = useState<CalEvent[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [showForm, setShowForm] = useState(false);
+  const [form, setForm] = useState({ titre: "", debut: "", fin: "", lieu: "", description: "" });
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    fetch("/api/calendar?days=14")
+      .then(r => r.json())
+      .then(d => { setEvents(d.events || []); setLoading(false); })
+      .catch(() => setLoading(false));
+  }, []);
+
+  const createEvent = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSaving(true);
+    const res = await fetch("/api/calendar", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(form),
+    });
+    if (res.ok) {
+      const d = await res.json();
+      setEvents(prev => [...prev, { id: d.eventId, titre: form.titre, debut: form.debut, fin: form.fin, lieu: form.lieu, description: form.description, toutJournee: false }]);
+      setForm({ titre: "", debut: "", fin: "", lieu: "", description: "" });
+      setShowForm(false);
+    }
+    setSaving(false);
+  };
+
+  const deleteEvent = async (id: string) => {
+    await fetch(`/api/calendar?eventId=${id}`, { method: "DELETE" });
+    setEvents(prev => prev.filter(e => e.id !== id));
+  };
+
+  const formatDate = (iso: string) => {
+    if (!iso) return "";
+    const d = new Date(iso);
+    return d.toLocaleDateString("fr-CA", { weekday: "short", month: "short", day: "numeric" });
+  };
+
+  const formatTime = (iso: string) => {
+    if (!iso) return "";
+    const d = new Date(iso);
+    return d.toLocaleTimeString("fr-CA", { hour: "2-digit", minute: "2-digit" });
+  };
+
+  const groupByDay = (evts: CalEvent[]) => {
+    const groups: Record<string, CalEvent[]> = {};
+    evts.forEach(e => {
+      const day = e.debut.split("T")[0] || e.debut;
+      if (!groups[day]) groups[day] = [];
+      groups[day].push(e);
+    });
+    return groups;
+  };
+
+  const grouped = groupByDay(events);
+  const today = new Date().toISOString().split("T")[0];
+
+  return (
+    <div className="pb-6">
+      {/* Header */}
+      <div className="flex items-center justify-between mb-4">
+        <div>
+          <div className="text-xs font-bold tracking-widest uppercase mb-0.5" style={{ color: "var(--gold)" }}>CALENDRIER</div>
+          <div className="text-sm" style={{ color: "var(--muted)" }}>14 prochains jours</div>
+        </div>
+        <button
+          onClick={() => setShowForm(!showForm)}
+          className="px-3 py-2 rounded-xl text-xs font-bold"
+          style={{ background: "var(--gold)", color: "#000" }}
+        >
+          + Ajouter
+        </button>
+      </div>
+
+      {/* Formulaire ajout */}
+      {showForm && (
+        <form onSubmit={createEvent} className="rounded-2xl p-4 mb-4 space-y-3" style={{ background: "var(--card)", border: "1px solid var(--border)" }}>
+          <input
+            required
+            placeholder="Titre de l'événement *"
+            value={form.titre}
+            onChange={e => setForm({ ...form, titre: e.target.value })}
+            className="w-full bg-transparent text-sm outline-none px-3 py-2 rounded-xl"
+            style={{ border: "1px solid var(--border)", color: "var(--text)" }}
+          />
+          <div className="grid grid-cols-2 gap-2">
+            <div>
+              <div className="text-xs mb-1" style={{ color: "var(--muted)" }}>Début</div>
+              <input
+                required type="datetime-local"
+                value={form.debut}
+                onChange={e => setForm({ ...form, debut: e.target.value })}
+                className="w-full bg-transparent text-xs outline-none px-3 py-2 rounded-xl"
+                style={{ border: "1px solid var(--border)", color: "var(--text)" }}
+              />
+            </div>
+            <div>
+              <div className="text-xs mb-1" style={{ color: "var(--muted)" }}>Fin</div>
+              <input
+                type="datetime-local"
+                value={form.fin}
+                onChange={e => setForm({ ...form, fin: e.target.value })}
+                className="w-full bg-transparent text-xs outline-none px-3 py-2 rounded-xl"
+                style={{ border: "1px solid var(--border)", color: "var(--text)" }}
+              />
+            </div>
+          </div>
+          <input
+            placeholder="Lieu (optionnel)"
+            value={form.lieu}
+            onChange={e => setForm({ ...form, lieu: e.target.value })}
+            className="w-full bg-transparent text-sm outline-none px-3 py-2 rounded-xl"
+            style={{ border: "1px solid var(--border)", color: "var(--text)" }}
+          />
+          <input
+            placeholder="Description (optionnel)"
+            value={form.description}
+            onChange={e => setForm({ ...form, description: e.target.value })}
+            className="w-full bg-transparent text-sm outline-none px-3 py-2 rounded-xl"
+            style={{ border: "1px solid var(--border)", color: "var(--text)" }}
+          />
+          <div className="flex gap-2">
+            <button type="button" onClick={() => setShowForm(false)} className="flex-1 py-2 rounded-xl text-sm" style={{ border: "1px solid var(--border)", color: "var(--muted)" }}>Annuler</button>
+            <button type="submit" disabled={saving} className="flex-1 py-2 rounded-xl text-sm font-bold" style={{ background: "var(--gold)", color: "#000" }}>
+              {saving ? "..." : "Créer"}
+            </button>
+          </div>
+        </form>
+      )}
+
+      {/* Événements */}
+      {loading ? (
+        <div className="text-center py-8" style={{ color: "var(--muted)" }}>Chargement...</div>
+      ) : events.length === 0 ? (
+        <div className="text-center py-12 rounded-2xl" style={{ background: "var(--card)", border: "1px solid var(--border)" }}>
+          <div className="text-3xl mb-3">📅</div>
+          <div className="text-sm font-semibold mb-1">Aucun événement</div>
+          <div className="text-xs" style={{ color: "var(--muted)" }}>Partage ton calendrier Google avec Léo d'abord</div>
+        </div>
+      ) : (
+        <div className="space-y-4">
+          {Object.entries(grouped).map(([day, dayEvents]) => (
+            <div key={day}>
+              <div className="text-xs font-bold mb-2 px-1 flex items-center gap-2">
+                <span style={{ color: day === today ? "var(--gold)" : "var(--muted)" }}>
+                  {day === today ? "AUJOURD'HUI" : formatDate(dayEvents[0].debut || day)}
+                </span>
+                {day === today && <span className="w-1.5 h-1.5 rounded-full" style={{ background: "var(--gold)" }} />}
+              </div>
+              <div className="space-y-2">
+                {dayEvents.map(ev => (
+                  <div key={ev.id} className="rounded-xl p-3 flex items-start justify-between gap-2"
+                    style={{ background: "var(--card)", border: `1px solid ${day === today ? "var(--gold)" : "var(--border)"}`, borderLeftWidth: "3px" }}>
+                    <div className="flex-1 min-w-0">
+                      <div className="text-sm font-semibold truncate">{ev.titre}</div>
+                      <div className="text-xs mt-0.5" style={{ color: "var(--gold)" }}>
+                        {ev.toutJournee ? "Toute la journée" : `${formatTime(ev.debut)} → ${formatTime(ev.fin)}`}
+                      </div>
+                      {ev.lieu && <div className="text-xs mt-0.5 truncate" style={{ color: "var(--muted)" }}>📍 {ev.lieu}</div>}
+                    </div>
+                    <button onClick={() => deleteEvent(ev.id)} className="text-xs shrink-0 px-2 py-1 rounded-lg" style={{ color: "var(--muted)", border: "1px solid var(--border)" }}>✕</button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function RoadmapTab() {
   const done = [
     { label: "Dashboard web mobile (PWA installée sur iPhone)", detail: "francois-os.vercel.app" },
@@ -917,6 +1104,7 @@ export default function Home() {
           {tab === "leads" && <LeadsTab />}
           {tab === "finances" && <FinancesTab deals={deals} />}
           {tab === "roadmap" && <RoadmapTab />}
+          {tab === "calendrier" && <CalendarTab />}
         </div>
       )}
 
@@ -926,8 +1114,8 @@ export default function Home() {
           {([
             { id: "pipeline", icon: "📊", label: "Pipeline", badge: activeDeals },
             { id: "leads", icon: "🎯", label: "Leads", badge: 0 },
+            { id: "calendrier", icon: "📅", label: "Agenda", badge: 0 },
             { id: "finances", icon: "$", label: "Finances", badge: 0 },
-            { id: "roadmap", icon: "🗺", label: "Roadmap", badge: 0 },
             { id: "chat", icon: "⚡", label: "Chat", badge: 0 },
           ] as const).map(item => (
             <button
