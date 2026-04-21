@@ -204,7 +204,22 @@ export async function POST(req: Request) {
 
     if (!message || !from) return new Response("OK", { status: 200 });
 
+    const FRANCOIS_NUMBER = "+15146215162";
     const contacts = getContacts();
+
+    // Si le message vient d'un contact (pas de François) → forwarder à François sans répondre
+    const isFromContact = Object.values(contacts).some(num => num === from);
+    if (from !== FRANCOIS_NUMBER && isFromContact) {
+      const contactName = Object.entries(contacts).find(([, num]) => num === from)?.[0] || from;
+      await sendSMS(FRANCOIS_NUMBER, `📩 Réponse de ${contactName}:\n"${message}"`);
+      return new Response("OK", { status: 200 });
+    }
+
+    // Si c'est un numéro inconnu → ignorer silencieusement
+    if (from !== FRANCOIS_NUMBER) {
+      return new Response("OK", { status: 200 });
+    }
+
     const intent = await classifyIntent(message, contacts);
 
     // 1. Proxy SMS
