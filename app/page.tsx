@@ -533,6 +533,8 @@ interface CalEvent {
   lieu: string;
   description: string;
   toutJournee: boolean;
+  calendrier?: string;
+  calendarId?: string;
 }
 
 function CalendarTab() {
@@ -566,8 +568,9 @@ function CalendarTab() {
     setSaving(false);
   };
 
-  const deleteEvent = async (id: string) => {
-    await fetch(`/api/calendar?eventId=${id}`, { method: "DELETE" });
+  const deleteEvent = async (id: string, calendarId?: string) => {
+    const [calId, eventId] = id.includes("::") ? id.split("::") : [calendarId || "primary", id];
+    await fetch(`/api/calendar?eventId=${eventId}&calendarId=${calId}`, { method: "DELETE" });
     setEvents(prev => prev.filter(e => e.id !== id));
   };
 
@@ -693,13 +696,16 @@ function CalendarTab() {
                   <div key={ev.id} className="rounded-xl p-3 flex items-start justify-between gap-2"
                     style={{ background: "var(--card)", border: `1px solid ${day === today ? "var(--gold)" : "var(--border)"}`, borderLeftWidth: "3px" }}>
                     <div className="flex-1 min-w-0">
-                      <div className="text-sm font-semibold truncate">{ev.titre}</div>
+                      <div className="flex items-center gap-2">
+                        <div className="text-sm font-semibold truncate">{ev.titre}</div>
+                        {ev.calendrier && <span className="text-xs px-1.5 py-0.5 rounded shrink-0" style={{ background: "var(--border)", color: "var(--muted)" }}>{ev.calendrier}</span>}
+                      </div>
                       <div className="text-xs mt-0.5" style={{ color: "var(--gold)" }}>
                         {ev.toutJournee ? "Toute la journée" : `${formatTime(ev.debut)} → ${formatTime(ev.fin)}`}
                       </div>
                       {ev.lieu && <div className="text-xs mt-0.5 truncate" style={{ color: "var(--muted)" }}>📍 {ev.lieu}</div>}
                     </div>
-                    <button onClick={() => deleteEvent(ev.id)} className="text-xs shrink-0 px-2 py-1 rounded-lg" style={{ color: "var(--muted)", border: "1px solid var(--border)" }}>✕</button>
+                    <button onClick={() => deleteEvent(ev.id, ev.calendarId)} className="text-xs shrink-0 px-2 py-1 rounded-lg" style={{ color: "var(--muted)", border: "1px solid var(--border)" }}>✕</button>
                   </div>
                 ))}
               </div>

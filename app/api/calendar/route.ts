@@ -30,12 +30,18 @@ async function getGoogleToken(): Promise<string> {
   return data.access_token;
 }
 
+const ALL_CALENDARS = [
+  { id: "francois.fortier@spacia.ca", label: "Spacia" },
+  { id: "f.fortier1010@gmail.com", label: "Personnel" },
+  { id: "francois.fortier@remax-quebec.com", label: "RE/MAX" },
+];
+
 // ─── LISTER ÉVÉNEMENTS ────────────────────────────────────────────────────────
 export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
-    const calendarId = searchParams.get("calendarId") || "primary";
-    const days = parseInt(searchParams.get("days") || "7");
+    const calendarId = searchParams.get("calendarId"); // si null → tous les calendriers
+    const days = parseInt(searchParams.get("days") || "14");
 
     const token = await getGoogleToken();
     const now = new Date();
@@ -49,36 +55,50 @@ export async function GET(req: Request) {
       maxResults: "50",
     });
 
-    const res = await fetch(
-      `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calendarId)}/events?${params}`,
-      { headers: { Authorization: `Bearer ${token}` } }
-    );
-    const data = await res.json();
+    const calendarsToFetch = calendarId
+      ? [{ id: calendarId, label: calendarId }]
+      : ALL_CALENDARS;
 
-    if (!res.ok) {
-      return NextResponse.json({ error: data.error?.message || "Erreur Calendar" }, { status: res.status });
-    }
+    const allEvents = (await Promise.allSettled(
+      calendarsToFetch.map(async (cal) => {
+        const res = await fetch(
+          `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(cal.id)}/events?${params}`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        const data = await res.json();
+        return (data.items || []).map((e: {
+          id: string;
+          summary?: string;
+          description?: string;
+          location?: string;
+          start?: { dateTime?: string; date?: string };
+          end?: { dateTime?: string; date?: string };
+          status?: string;
+        }) => ({
+          id: `${cal.id}::${e.id}`,
+          titre: e.summary || "(Sans titre)",
+          description: e.description || "",
+          lieu: e.location || "",
+          debut: e.start?.dateTime || e.start?.date || "",
+          fin: e.end?.dateTime || e.end?.date || "",
+          toutJournee: !e.start?.dateTime,
+          statut: e.status,
+          calendrier: cal.label,
+          calendarId: cal.id,
+        }));
+      })
+    ))
+      .filter(r => r.status === "fulfilled")
+      .flatMap(r => (r as PromiseFulfilledResult<unknown[]>).value);
 
-    const events = (data.items || []).map((e: {
-      id: string;
-      summary?: string;
-      description?: string;
-      location?: string;
-      start?: { dateTime?: string; date?: string };
-      end?: { dateTime?: string; date?: string };
-      status?: string;
-    }) => ({
-      id: e.id,
-      titre: e.summary || "(Sans titre)",
-      description: e.description || "",
-      lieu: e.location || "",
-      debut: e.start?.dateTime || e.start?.date || "",
-      fin: e.end?.dateTime || e.end?.date || "",
-      toutJournee: !e.start?.dateTime,
-      statut: e.status,
-    }));
+    // Trier par date
+    allEvents.sort((a: unknown, b: unknown) => {
+      const ea = a as { debut: string };
+      const eb = b as { debut: string };
+      return ea.debut.localeCompare(eb.debut);
+    });
 
-    return NextResponse.json({ events });
+    return NextResponse.json({ events: allEvents });
   } catch (err) {
     console.error("Calendar GET error:", err);
     return NextResponse.json({ error: "Erreur serveur" }, { status: 500 });
