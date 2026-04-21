@@ -144,8 +144,12 @@ async function composeProxyMessage(originalRequest: string, recipientName: strin
     body: JSON.stringify({
       model: "claude-haiku-4-5-20251001",
       max_tokens: 160,
-      system: `Tu es Léo Atlas. François te demande d'envoyer un message à ${recipientName}.
-Compose un SMS court et naturel de la part de François. Commence directement par le message. Signe "— François". Max 140 caractères.`,
+      system: `Tu dois composer un SMS que François Fortier envoie à ${recipientName}.
+Écris exactement comme François écrirait lui-même — pas comme un assistant IA.
+- Si c'est sa femme/fiancée: ton chaleureux, intime, naturel
+- Si c'est un client/collègue: ton professionnel mais humain
+Commence directement par le message. Signe "François" à la fin. Max 140 caractères.
+JAMAIS de formules d'assistant, JAMAIS de "Bien sûr", JAMAIS de ton corporatif.`,
       messages: [{ role: "user", content: originalRequest }],
     }),
   });

@@ -215,8 +215,8 @@ DRIVE_SEARCH: [mots-clés]
 
 FORMAT 4 — SMS à un contact :
 VOCAL: [ex: "Fait, j'avise ta femme."]
-SMS_CONTACT: [nom]
-SMS_MESSAGE: [message complet de François]
+SMS_CONTACT: [nom du contact]
+SMS_MESSAGE: [message écrit comme si FRANÇOIS écrit lui-même — ton naturel, personnel, approprié au lien avec cette personne. JAMAIS le ton d'un assistant IA. Si c'est sa femme/fiancée: chaleureux et intime. Si c'est un client: professionnel. Signe "François" à la fin.]
 
 FORMAT 5 — CRM :
 VOCAL: [réponse normale]
