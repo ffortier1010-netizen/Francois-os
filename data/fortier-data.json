@@ -9,11 +9,15 @@
     { "id": "2", "texte": "Identifier 3 CPA à contacter cette semaine", "fait": false, "objectif": 1 },
     { "id": "3", "texte": "Créer Google Sheet CRM (7 colonnes)", "fait": false, "objectif": 1 },
     { "id": "4", "texte": "Confirmer valeur réelle des 2 terrains", "fait": false, "objectif": 1 },
-    { "id": "5", "texte": "[Du Cartier] Confirmer courtier hypothécaire (avec Serge)", "fait": false, "objectif": 1 },
-    { "id": "6", "texte": "[Du Cartier] Établir partenariat notaire commercial", "fait": false, "objectif": 1 },
-    { "id": "7", "texte": "[Du Cartier] Finaliser offre courtier — structure tarifaire + processus", "fait": false, "objectif": 1 },
-    { "id": "8", "texte": "[Du Cartier] Finaliser offre client — proposition de valeur intégrée", "fait": false, "objectif": 1 },
-    { "id": "9", "texte": "[Du Cartier] Évaluer et choisir CRM (avec François Pesant)", "fait": false, "objectif": 1 },
-    { "id": "10", "texte": "[Du Cartier] Programmer prochaine rencontre avec Serge et François Pesant", "fait": false, "objectif": 1 }
+    { "id": "5", "texte": "[Du Cartier] 1. Courtier hypothécaire — Confirmer candidat ciblé et approcher 1-2 options supplémentaires (François + Serge)", "fait": false, "objectif": 1 },
+    { "id": "6", "texte": "[Du Cartier] 2. Courtier assurance — Sélectionner partenaire spécialisé commercial (François Pesant)", "fait": false, "objectif": 1 },
+    { "id": "7", "texte": "[Du Cartier] 3. Notaire — Établir partenariat avec étude notariale expérimentée en commercial (François Fortier)", "fait": false, "objectif": 1 },
+    { "id": "8", "texte": "[Du Cartier] 4. Gestionnaire de patrimoine — Identifier professionnel aligné avec clientèle cible (Serge)", "fait": false, "objectif": 1 },
+    { "id": "9", "texte": "[Du Cartier] 5. Fiscaliste — Partenariat avec expert en fiscalité immobilière commerciale (Serge)", "fait": false, "objectif": 1 },
+    { "id": "10", "texte": "[Du Cartier] 6. Finaliser l'offre courtier — Compléter structure tarifaire et processus (François Fortier)", "fait": false, "objectif": 1 },
+    { "id": "11", "texte": "[Du Cartier] 7. Finaliser l'offre client — Structurer la proposition de valeur intégrée (François Fortier)", "fait": false, "objectif": 1 },
+    { "id": "12", "texte": "[Du Cartier] 8. CRM — Évaluer et sélectionner la solution CRM pour Du Cartier Commercial (François Fortier + François Pesant)", "fait": false, "objectif": 1 },
+    { "id": "13", "texte": "[Du Cartier] 9. Créer comptes LinkedIn, Facebook, Instagram Du Cartier Commercial (François Pesant)", "fait": false, "objectif": 1 },
+    { "id": "14", "texte": "[Du Cartier] 10. Programmer la prochaine rencontre — Fixer date/heure pour suivi (Tous)", "fait": false, "objectif": 1 }
   ]
 }
