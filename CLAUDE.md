@@ -96,6 +96,11 @@ Santé, énergie, entraînement, sommeil, nutrition pour entrepreneur.
 Création de documents professionnels bilingues FR/EN, Excel, classement Drive.
 → Invoque si : rédaction, contrats, rapports, propositions, Excel
 
+### [MARKETING & BRAND]
+Département marketing complet — stratégie, campagnes, contenu, image de marque Du Cartier Commercial. Gardien de la charte visuelle (or/noir/blanc) sur TOUS les documents de l'écosystème.
+→ Invoque si : contenu LinkedIn/Instagram/YouTube, campagnes Meta Ads, rapport de marché, visuel, branding, analyse compétitive, calendrier éditorial
+→ **Validation obligatoire** : tout document ou visuel produit par un autre agent passe par ce filtre avant livraison
+
 ---
 
 ## MÉMOIRE & CONTINUITÉ
